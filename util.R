@@ -61,6 +61,7 @@ getRollingAvg<-function(asset,duration,endDate,rollingperiod){
   #   duration is #of days or #of observations needed
   #   rollingperiod is days 
   #   Min 2 assests are required   
+  #   getRollingAvg(c("aapl","baba"),90,Sys.Date(),20)
   
   asset = c("^dji", asset)
   endDate = as.Date(endDate,format="%m/%d/%Y")
