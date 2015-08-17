@@ -1,13 +1,16 @@
+
+ 
 library(RODBC)
 
 ch <- odbcConnect("portfolio")
  
-res <- sqlFetch(ch, "US Executed Yr 2010") #Fetch Query results to DF
+res <- sqlFetch(ch, "US Executed Yr 2010") #Fetch Query results to D
 
-res2 <- sqlQuery(ch, paste("SELECT symbol, name FROM USStocks"))
+sqlQuery(ch, paste("SELECT symbol, name FROM USStocks"))
 
 
 close(ch)
+ 
 
 #  # Connecting Excel files
 # 

@@ -42,26 +42,39 @@ getStockHist <- function(stk,sdate,edate,pricetype="Adj.Close") {
   return(ss)
 } #getStkHist
 
-# 
-# { #-----  Driver for Stock Hist-----------
-# startDate=(as.Date("01/01/2008",format="%m/%d/%Y"))
-# endDate = as.Date("12/31/2009",format="%m/%d/%Y")
-# 
-# asset.vec = read.csv("sp5002012.csv")
-# 
-# event = 10
-# 
-# st = mapply(SIMPLIFY=FALSE ,as.character(asset.vec$stock)  ,FUN=function(x)tryCatch(getStockHist(stk=x,sdate=startDate,edate=endDate,pricetype="Close") ,error=function(e)return(NA)))
-# }
+getReturns <- function(asset,duration,endDate,period=1){
+  
+  #    endDate is last date of returns is done
+  #   startDate is begin of stock history to fetch
+  #   duration is #of days or #of observations needed
+  #   period: Daily =1 day gap : Future
+  #   Min 2 assests are required   
+  #   getReturns(c("PFE","baba"),90,Sys.Date())
+  #  DEPENDANCY: getStockHist()
+  asset = c("^dji", asset)
+  endDate = as.Date(endDate,format="%m/%d/%Y")
+  startDate = endDate  -duration-1
+  
+  st = mapply(SIMPLIFY=FALSE ,as.character(asset)  ,FUN=function(x)tryCatch(getStockHist(stk=x,sdate=startDate,edate=endDate,pricetype="Adj.Close") ,error=function(e)return(NA)))
+  
+  stkval= do.call("cbind",st)
+  
+  stkval= data.frame(stkval[order(stkval[1],decreasing=T),])
+  return (  diff(log(as.matrix(stkval[1:(1+duration+1),grep("*.price",colnames(stkval))])))  )
+  
+}
+
 
 getRollingAvg<-function(asset,duration,endDate,rollingperiod){
   
-  #   endDate is the daet at which BValue is done
+  #   CHECK ALSO with GOLDEN CROSS . R file 
+  #    endDate is the daet at which BValue is done
   #   startDate is begin of stock history to fetch
   #   duration is #of days or #of observations needed
   #   rollingperiod is days 
   #   Min 2 assests are required   
-  #   getRollingAvg(c("aapl","baba"),90,Sys.Date(),20)
+  #   getRollingAvg(c("PFE","baba"),90,Sys.Date(),20)
+  #  DEPENDANCY: getStockHist()
   
   asset = c("^dji", asset)
   endDate = as.Date(endDate,format="%m/%d/%Y")
@@ -71,10 +84,9 @@ getRollingAvg<-function(asset,duration,endDate,rollingperiod){
   
    stkval= do.call("cbind",st)
   
-  stkval= stkval[order(stkval[1],decreasing=T),]
+  stkval= (stkval[order(stkval[1],decreasing=T),])
   
-  return (  roll.mean = colMeans(stkval[1:rollingperiod,paste0(asset,".price")]))
-  
+  return (  roll.mean = colMeans(stkval[1:rollingperiod,grep("*.price",colnames(stkval))])  )
 }
 
 eventgenerate<-function(stkhist,event,pricedrop){
@@ -134,18 +146,13 @@ generateTX<-function(stkvalues,orders){
    }  # function 
 
 
-getPortfolioStats<-function(dailyreturns, pfweights){
+getPortfolioStats<-function(dailyreturns, pfweights=1:NCOL(dailyreturns)){
   
   pf.ret  = pfweights%*%t(dailyreturns) # daily returns
   pf.sd = sd(pf.ret,na.rm=TRUE)  # Volatility - seems ok 
-  
-  pf.mean = mean(pf.ret,na.rm=TRUE)-1  # Avg daily Return or divide by 251?
-  
-  pf.ret.cumm = rowSums(pf.ret,na.rm=TRUE)/(ncol(pf.ret)) # Average Daily Return +1
-  
-  pf.sharpe =sqrt(252)*(pf.mean/pf.sd)
-  pf.sharpe
-  
+  pf.mean = mean(pf.ret,na.rm=TRUE)  # Avg daily Return 
+  pf.ret.cumm = rowSums(pf.ret,na.rm=TRUE)/(ncol(pf.ret)) # Average Daily Return - Aggregate way
+  pf.sharpe =sqrt(252)*(pf.mean/pf.sd)  # Annualized
   df=data.frame(pf.sd, pf.mean,pf.sharpe)
   
   return(df)
