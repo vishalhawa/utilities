@@ -19,7 +19,7 @@ getStockHist <- function(stk,sdate,edate,pricetype="Adj.Close") {
   
   
   url<-paste("http://real-chart.finance.yahoo.com/table.csv?s=",stk,"&a=",smonth-1,"&b=",sday,"&c=",syear,"&d=",emonth-1,"&e=",eday,"&f=",eyear,"&g=d&ignore=.csv",sep="")
-  
+  print(url)
   
   urls <- lapply(stk,function(x)paste0("http://real-chart.finance.yahoo.com/table.csv?s=",x,"&a=",smonth-1,"&b=",sday,"&c=",syear,"&d=",emonth-1,"&e=",eday,"&f=",eyear,"&g=d&ignore=.csv"))
   # print(urls) 
@@ -75,9 +75,11 @@ getRollingAvg<-function(asset,duration,endDate,rollingperiod){
   #   Min 2 assests are required   
   #   getRollingAvg(c("PFE","baba"),90,Sys.Date(),20)
   #  DEPENDANCY: getStockHist()
-  if (duration<1) stop("Duration is less than 1 day")
+  if (duration<1) stop("Duration should be 1 day or more ")
+  if (rollingperiod<1) stop("rollingperiod should be 1 day or more ")
+  if (class(asset)!= "character") stop("Symbols are not Character will Fail at HTTP ")
   
-  asset = c("^dji", asset)
+  asset = as.character(c("^dji", asset)) 
   endDate = as.Date(endDate,format="%m/%d/%Y")
   startDate = endDate - (rollingperiod) - duration
  
