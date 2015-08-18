@@ -46,7 +46,7 @@ getReturns <- function(asset,duration,endDate,period=1){
   
   #    endDate is last date of returns is done
   #   startDate is begin of stock history to fetch
-  #   duration is #of days or #of observations needed
+  #   duration is #of days or #of observations needed 
   #   period: Daily =1 day gap : Future
   #   Min 2 assests are required   
   #   getReturns(c("PFE","baba"),90,Sys.Date())
@@ -68,13 +68,14 @@ getReturns <- function(asset,duration,endDate,period=1){
 getRollingAvg<-function(asset,duration,endDate,rollingperiod){
   
   #   CHECK ALSO with GOLDEN CROSS . R file 
-  #    endDate is the daet at which BValue is done
+  #    endDate 
   #   startDate is begin of stock history to fetch
   #   duration is #of days or #of observations needed
-  #   rollingperiod is days 
+  #   rollingperiod is days of average needed: 1 => same day
   #   Min 2 assests are required   
   #   getRollingAvg(c("PFE","baba"),90,Sys.Date(),20)
   #  DEPENDANCY: getStockHist()
+  if (duration<1) stop("Duration is less than 1 day")
   
   asset = c("^dji", asset)
   endDate = as.Date(endDate,format="%m/%d/%Y")
@@ -86,7 +87,10 @@ getRollingAvg<-function(asset,duration,endDate,rollingperiod){
   
   stkval= (stkval[order(stkval[1],decreasing=T),])
   
-  return (  roll.mean = colMeans(stkval[1:rollingperiod,grep("*.price",colnames(stkval))])  )
+  roll.mean= as.data.frame(sapply(c(1:duration) ,function(x) colMeans(stkval[x:(x+rollingperiod-1) ,grep("*.price",colnames(stkval))])))
+  colnames(roll.mean)<- stkval[1:duration,1]
+    
+  return (  roll.mean   )
 }
 
 eventgenerate<-function(stkhist,event,pricedrop){
