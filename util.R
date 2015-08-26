@@ -19,7 +19,7 @@ getStockHist <- function(stk,sdate,edate,pricetype="Adj.Close") {
   
   
   url<-paste("http://real-chart.finance.yahoo.com/table.csv?s=",stk,"&a=",smonth-1,"&b=",sday,"&c=",syear,"&d=",emonth-1,"&e=",eday,"&f=",eyear,"&g=d&ignore=.csv",sep="")
-  print(url)
+ # print(url)
   
   urls <- lapply(stk,function(x)paste0("http://real-chart.finance.yahoo.com/table.csv?s=",x,"&a=",smonth-1,"&b=",sday,"&c=",syear,"&d=",emonth-1,"&e=",eday,"&f=",eyear,"&g=d&ignore=.csv"))
   # print(urls) 
@@ -74,15 +74,17 @@ getRollingAvg<-function(asset,duration,endDate,rollingperiod){
   #   rollingperiod is days of average needed: 1 => same day
   #   Min 2 assests are required   
   #   getRollingAvg(c("PFE","baba"),90,Sys.Date(),20)
+  #   Use getRollingAvg(asset = as.character(tickers[400:410]),duration=1,endDate = Sys.Date(),rollingperiod=1) to get Price for the day
   #  DEPENDANCY: getStockHist()
   if (duration<1) stop("Duration should be 1 day or more ")
   if (rollingperiod<1) stop("rollingperiod should be 1 day or more ")
-  if (class(asset)!= "character") stop("Symbols are not Character will Fail at HTTP ")
+  # if (class(asset)!= "character") stop("Symbols are not Character will Fail at HTTP ")
   
-  asset = as.character(c("^dji", asset)) 
+  asset = append("^dji",as.character(asset))
+  
   endDate = as.Date(endDate,format="%m/%d/%Y")
-  startDate = endDate - (rollingperiod) - duration
- 
+  startDate = endDate - (1.5*rollingperiod) - 1.5*duration #  extra for buffer
+
   st = mapply(SIMPLIFY=FALSE ,as.character(asset)  ,FUN=function(x)tryCatch(getStockHist(stk=x,sdate=startDate,edate=endDate,pricetype="Adj.Close") ,error=function(e)return(NA)))
   
    stkval= do.call("cbind",st)
@@ -92,6 +94,7 @@ getRollingAvg<-function(asset,duration,endDate,rollingperiod){
   roll.mean= as.data.frame(sapply(c(1:duration) ,function(x) colMeans(stkval[x:(x+rollingperiod-1) ,grep("*.price",colnames(stkval))])))
   colnames(roll.mean)<- stkval[1:duration,1]
     
+  roll.mean = roll.mean[-1,]  # Delete Row of ^dji.price
   return (  roll.mean   )
 }
 
